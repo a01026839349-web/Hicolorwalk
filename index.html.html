@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hi-COLOR WALK | Field Terminal</title>
+<style>
+:root {
+  --paper:#FAF8F2; --panel:#FFFFFF; --ink:#2C3E35; --muted:#717B74;
+  --line:#D9D5C6; --green:#5E7860; --brown:#C58D62; --blue:#00457E;
+  --white:#FFFFFF; --danger:#A65E50; --accent-bg:#F4F1EA;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"Noto Sans KR",sans-serif;line-height:1.6}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+
+/* 헤더 디자인 - 기획안 스타일 반영 */
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--green);padding-bottom:18px;gap:16px;background:rgba(255,255,255,0.8);padding:15px 20px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.03)}
+.brand{color:var(--green);font-weight:900;letter-spacing:.08em;font-size:14px}
+.status{color:var(--muted);font-size:11px;letter-spacing:.08em;font-weight:700}
+
+.hero{padding:36px 0 20px;text-align:left}
+.eyebrow{color:var(--green);font-size:12px;letter-spacing:.12em;font-weight:700;margin-bottom:6px}
+h1{font-size:clamp(36px,6vw,56px);line-height:1.1;letter-spacing:-.03em;margin:0 0 14px;font-weight:900}
+h1 .hi{color:var(--blue)} h1 .color-word{color:var(--green)}
+.intro{max-width:750px;color:var(--muted);font-size:15px}
+
+/* 오늘의 테마 카드 - 기획안 우측 카드 스타일 차용 */
+.theme-card{margin:24px 0;padding:20px 24px;border:2px solid var(--line);border-radius:14px;background:var(--panel);display:flex;justify-content:space-between;align-items:center;gap:16px;box-shadow:0 6px 20px rgba(0,0,0,0.04)}
+.theme-kicker{font-size:11px;letter-spacing:.1em;color:var(--green);font-weight:800}
+.theme-name{font-size:22px;font-weight:900;margin-top:4px;color:var(--ink)}
+.theme-day{font-size:13px;color:var(--muted);margin-top:2px}
+.theme-chip{width:50px;height:50px;border-radius:50%;border:2px solid rgba(0,0,0,0.08);flex:none;box-shadow:0 3px 10px rgba(0,0,0,0.08)}
+
+/* 레이아웃 및 패널 스타일 - 기획안의 둥근 모서리 및 부드러운 그림자 적용 */
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 6px 20px rgba(0,0,0,0.03)}
+.panel h2{color:var(--green);font-size:15px;letter-spacing:.08em;margin:0 0 8px;font-weight:800}
+.sub{color:var(--muted);font-size:13px;margin:0 0 18px;line-height:1.5}
+
+/* 리스트 스타일 */
+ul.bullet-list {margin:0;padding-left:18px;list-style-type:disc;}
+ul.bullet-list li {margin-bottom:6px;font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* 업로드 박스 - 기획안의 아이콘 박스 느낌 */
+.upload-box{min-height:220px;border:2px dashed #B8C2B5;background:var(--accent-bg);border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;cursor:pointer;transition:.2s}
+.upload-box.drag{border:2px solid var(--green);background:#EAEFE8}
+.upload-box strong{font-size:14px;margin-top:10px;color:var(--ink)}
+.upload-box small{color:var(--muted);margin-top:5px;font-size:12px}
+.upload-icon{font-size:32px;color:var(--green)}
+.file-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.preview-wrap{display:none;margin-top:14px}
+.preview-stage{position:relative;display:inline-block;max-width:100%;cursor:crosshair}
+#preview{display:block;max-width:100%;max-height:390px;border-radius:10px;object-fit:contain;border:1px solid var(--line)}
+#pickCursor{display:none;position:absolute;width:18px;height:18px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 2px var(--green);transform:translate(-50%,-50%);pointer-events:none}
+.hint{color:var(--muted);font-size:11.5px;margin:8px 0 0}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+
+/* 버튼 및 인터랙션 컴포넌트 */
+button,.file-button{border:2px solid var(--green);color:var(--green);background:var(--panel);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s}
+button.primary{background:var(--green);color:white}
+button:disabled{opacity:.4;cursor:not-allowed;border-color:var(--line);background:#F0EDE6;color:var(--muted)}
+button:hover:not(:disabled),.file-button:hover{background:#EDF2EC}
+button.primary:hover:not(:disabled){background:#4D634F}
+
+.section{margin-top:24px}
+.section-title{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:12px}
+.section-title h3{margin:0;font-size:14px;color:var(--green);letter-spacing:.05em;font-weight:800}
+.section-title span{color:var(--muted);font-size:12px}
+
+.palette{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.swatch{min-width:0}
+.swatch-color{height:52px;border:1px solid rgba(0,0,0,0.08);border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.04)}
+.swatch code{display:block;font-size:10.5px;color:var(--muted);margin-top:6px;text-align:center;font-weight:700}
+
+.selected-color{display:flex;align-items:center;gap:10px;border:2px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 12px;font-size:12px}
+.selected-color button{padding:2px 8px;border:0;color:var(--danger);font-size:16px;background:transparent}
+.color-dot{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,0.15);display:inline-block;flex:none}
+.empty{color:var(--muted);font-size:12px;padding:6px 0}
+
+/* 스포이트 및 테두리 그룹 박스 (기획안 일러스트 스타일 반영) */
+.action-group-box {
+  border: 2px dashed var(--line);
+  background: var(--accent-bg);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 14px;
+}
+.pick-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+.pick-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.note{color:var(--muted);font-size:12px;margin:12px 0 0;line-height:1.5}
+.submit-panel{margin-top:24px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{margin-top:4px}
+label.field-label{display:block;font-size:12px;color:var(--green);margin-bottom:6px;font-weight:700}
+input[type="text"],input[type="tel"],textarea,select{width:100%;border:2px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;color:var(--ink);font:inherit;font-size:14px;transition:.2s}
+input[type="text"]:focus,input[type="tel"]:focus,select:focus{outline:none;border-color:var(--green)}
+
+#message{margin-top:14px;font-size:13px;color:var(--green);min-height:20px;font-weight:700}
+footer{border-top:2px solid var(--line);margin-top:36px;padding-top:18px;color:var(--muted);font-size:11px;letter-spacing:.05em;text-align:center;font-weight:700}
+
+@media(max-width:750px){.page{padding:20px 14px 40px}.layout{grid-template-columns:1fr}.theme-card{padding:16px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="brand">한양여자대학교 · AID 공모전 프로젝트</div>
+    <div class="status">컬러 아카이브 / 프로토타입 02</div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">우리 지역의 색채를 찾아서</div>
+    <h1><span class="hi">HI-</span><span class="color-word">COLOR WALK</span></h1>
+    <p class="intro">테마 컬러에 맞는 우리 지역의 색을 기록해 주세요. 사진 속 주요 컬러를 추출하고, 스포이트로 추가 색상을 선택하거나 다음 테마로 추천하고 싶은 색을 남길 수 있습니다.</p>
+  </section>
+
+  <section class="theme-card" aria-live="polite">
+    <div>
+      <div class="theme-kicker">이 색을 찾아주세요 :)</div>
+      <div class="theme-name" id="themeName">오늘의 테마 컬러</div>
+      <div class="theme-day" id="themeDay">테마 컬러는 매주 변경됩니다.</div>
+    </div>
+    <div class="theme-chip" id="themeChip"></div>
+  </section>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>01 / 사진 업로드</h2>
+      <p class="sub">오늘의 컬러를 발견한 순간의 사진을 업로드해 주세요.</p>
+      <label class="upload-box" id="dropZone" for="fileInput">
+        <span class="upload-icon">＋</span>
+        <strong>사진을 선택하거나 여기에 끌어놓으세요</strong>
+        <small>JPG · PNG · WEBP</small>
+      </label>
+      <input class="file-hidden" id="fileInput" type="file" accept="image/*">
+      <div class="preview-wrap" id="previewWrap">
+        <div class="preview-stage" id="previewStage">
+          <img id="preview" alt="업로드한 사진 미리보기">
+          <span id="pickCursor"></span>
+        </div>
+        <p class="hint">※스포이트 선택 모드를 켠 뒤 사진을 클릭하면 해당 위치의 색을 추출합니다.</p>
+        <div class="actions">
+          <button type="button" id="changePhoto">사진 변경</button>
+          <button type="button" id="deletePhoto">사진 삭제</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>02 / 컬러 추출 및 선택</h2>
+      <ul class="bullet-list" style="margin-bottom: 18px;">
+        <li>사진을 업로드하면 주요 컬러가 자동으로 추출됩니다. (최대 5개)</li>
+        <li>원하는 색이 나오지 않았다면 스포이트를 사용해 추가할 수 있습니다. (최대 3개)</li>
+      </ul>
+      
+      <div class="palette" id="mainPalette">
+        <ul class="bullet-list" style="grid-column: 1 / -1;">
+          <li class="empty">사진을 업로드하면 주요 컬러가 표시됩니다.</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <!-- 스포이트 영역 테두리 박스 -->
+        <div class="action-group-box">
+          <div class="pick-tools">
+            <span class="hint" style="margin:0;">※추가 컬러는 사진 속 원하는 지점을 직접 선택할 수 있습니다.</span>
+            <button type="button" class="primary" id="pickMode" disabled>스포이트 시작</button>
+          </div>
+        </div>
+        
+        <ul class="bullet-list" style="margin-top:12px;">
+          <li id="eyedropperStatus">사진을 업로드하면 스포이트를 사용할 수 있습니다.</li>
+        </ul>
+
+        <div class="pick-list" id="pickList">
+          <ul class="bullet-list">
+            <li class="empty">직접 추가한 컬러가 여기에 표시됩니다.</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="field" style="margin-top:20px;">
+        <label class="field-label" for="closestThemeSelect" id="closestThemeLabel">※가장 오늘의 테마 컬러에 가깝다고 생각하는 색을 선택해주세요.</label>
+        <select id="closestThemeSelect">
+          <option value="">추출된 컬러 중 선택해주세요</option>
+        </select>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel section">
+    <div class="section-title">
+      <h3>03 / 추천 컬러 남기기</h3>
+      <span>추천 컬러 · 1개</span>
+    </div>
+    
+    <ul class="bullet-list" style="margin-bottom: 14px;">
+      <li>사진에서 특히 마음에 들었던 색을 추천해주세요. 다음 테마 컬러로 추첨될 수 있습니다.</li>
+    </ul>
+
+    <!-- 추천 컬러 영역 테두리 박스 -->
+    <div class="action-group-box">
+      <div class="pick-tools">
+        <span class="hint" style="margin:0;">※스포이트를 켜고 사진 속 추천하고 싶은 색을 클릭해 주세요.</span>
+        <button type="button" class="primary" id="recommendMode" disabled>추천 컬러 선택</button>
+      </div>
+    </div>
+
+    <ul class="bullet-list" style="margin-top:12px;">
+      <li id="recommendStatus">사진을 업로드하면 추천 컬러를 선택할 수 있습니다.</li>
+    </ul>
+
+    <div class="pick-list" id="recommendList">
+      <ul class="bullet-list">
+        <li class="empty">아직 추천한 컬러가 없습니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="panel submit-panel">
+    <h2>04 / 참여자 정보</h2>
+    <div class="info-grid">
+      <div class="field">
+        <label class="field-label" for="participantName">이름</label>
+        <input type="text" id="participantName" placeholder="이름을 입력해 주세요" autocomplete="name">
+      </div>
+      <div class="field">
+        <label class="field-label" for="studentId">학번</label>
+        <input type="text" id="studentId" placeholder="한양여대 학생일 경우 학번을 기재해주세요." inputmode="numeric">
+      </div>
+      <div class="field">
+        <label class="field-label" for="phone">전화번호 (상품 수령 안내용)</label>
+        <input type="tel" id="phone" placeholder="예: 010-1234-5678" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label class="field-label" for="place">발견한 장소</label>
+        <input type="text" id="place" placeholder="예: 학교 앞 골목, 사근동 산책길">
+      </div>
+    </div>
+    <p class="note">현재 화면은 공모전 시연용 프로토타입으로, 입력한 정보와 사진은 실제 서버로 전송되지 않습니다. 실제 운영 시에는 개인정보 수집·이용 동의 절차가 별도로 필요합니다.</p>
+    <div id="message" role="status"></div>
+    <div class="actions" style="margin-top:16px;"><button type="button" class="primary" id="submitBtn" style="width:100%; padding:14px; font-size:15px;">참여 기록 미리보기</button></div>
+  </section>
+  <footer>HI-COLOR WALK · 우리 지역의 색채를 발견하다</footer>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const fileInput=$('fileInput'), dropZone=$('dropZone'), previewWrap=$('previewWrap');
+  const preview=$('preview'), previewStage=$('previewStage'), cursor=$('pickCursor');
+  const mainPalette=$('mainPalette'), pickModeButton=$('pickMode'), pickList=$('pickList');
+  const status=$('eyedropperStatus'), recommendButton=$('recommendMode');
+  const recommendStatus=$('recommendStatus'), recommendList=$('recommendList');
+  const message=$('message');
+  const closestThemeSelect=$('closestThemeSelect');
+
+  const weekdayThemes = [
+    {day:'일요일', name:'보라', english:'VIOLET', hex:'#8B5AA5'},
+    {day:'월요일', name:'빨강', english:'RED', hex:'#D94A4A'},
+    {day:'화요일', name:'주황', english:'ORANGE', hex:'#E88A36'},
+    {day:'수요일', name:'노랑', english:'YELLOW', hex:'#E6C84F'},
+    {day:'목요일', name:'초록', english:'GREEN', hex:'#57945B'},
+    {day:'금요일', name:'파랑', english:'BLUE', hex:'#3978B9'},
+    {day:'토요일', name:'남색', english:'INDIGO', hex:'#514B91'}
+  ];
+  const todayTheme=weekdayThemes[new Date().getDay()];
+  $('themeName').textContent=`오늘의 테마 컬러 : ${todayTheme.name}`;
+  $('themeChip').style.background=todayTheme.hex;
+  $('closestThemeLabel').textContent=`※가장 오늘의 테마 컬러(${todayTheme.name})에 가깝다고 생각하는 색을 선택해주세요.`;
+
+  let imageUrl=null, extractedColors=[], pickColors=[], recommendColor=null;
+  let mode='';
+
+  function setMessage(text,isError=false){message.textContent=text;message.style.color=isError?'var(--danger)':'var(--green)';}
+  function rgbToHex(r,g,b){return '#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('').toUpperCase();}
+  function colorDistance(a,b){return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);}
+  
+  function updateThemeSelectOptions(){
+    const allColors = [...extractedColors.map(c=>c.hex), ...pickColors];
+    closestThemeSelect.innerHTML='<option value="">추출된 컬러 중 선택해주세요</option>' + 
+      allColors.map(hex=>`<option value="${hex}">${hex}</option>`).join('');
+  }
+
+  function extractColors(img){
+    const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const size=100;canvas.width=size;canvas.height=size;ctx.drawImage(img,0,0,size,size);
+    const data=ctx.getImageData(0,0,size,size).data,points=[];
+    for(let i=0;i<data.length;i+=16){if(data[i+3]>=128)points.push([data[i],data[i+1],data[i+2]]);}
+    if(!points.length)return [];
+    const k=Math.min(5,points.length),centers=[];
+    for(let i=0;i<k;i++)centers.push(points[Math.floor((i+.5)*points.length/k)].slice());
+    for(let round=0;round<12;round++){
+      const sums=Array.from({length:k},()=>[0,0,0,0]);
+      for(const p of points){let best=0,dist=Infinity;centers.forEach((c,j)=>{const d=colorDistance(p,c);if(d<dist){dist=d;best=j;}});sums[best][0]+=p[0];sums[best][1]+=p[1];sums[best][2]+=p[2];sums[best][3]++;}
+      sums.forEach((s,j)=>{if(s[3])centers[j]=[s[0]/s[3],s[1]/s[3],s[2]/s[3]];});
+    }
+    const counts=Array(k).fill(0);
+    points.forEach(p=>{let best=0,dist=Infinity;centers.forEach((c,j)=>{const d=colorDistance(p,c);if(d<dist){dist=d;best=j;}});counts[best]++;});
+    return centers.map((c,i)=>({hex:rgbToHex(...c),pct:Math.round(counts[i]/points.length*100)})).sort((a,b)=>b.pct-a.pct);
+  }
+  function renderMainColors(){
+    if(!extractedColors.length){mainPalette.innerHTML='<ul class="bullet-list" style="grid-column: 1 / -1;"><li class="empty">사진을 업로드하면 주요 컬러가 표시됩니다.</li></ul>';return;}
+    mainPalette.innerHTML=extractedColors.map(c=>`<div class="swatch"><div class="swatch-color" style="background:${c.hex}"></div><code>${c.hex}</code><code>${c.pct}%</code></div>`).join('');
+    updateThemeSelectOptions();
+  }
+  function renderPicks(){
+    if(!pickColors.length){pickList.innerHTML='<ul class="bullet-list"><li class="empty">직접 추가한 컬러가 여기에 표시됩니다.</li></ul>';updateThemeSelectOptions();return;}
+    pickList.innerHTML=pickColors.map((hex,i)=>`<div class="selected-color"><span class="color-dot" style="background:${hex}"></span><strong>${hex}</strong><button type="button" data-remove="${i}" aria-label="컬러 삭제">×</button></div>`).join('');
+    pickList.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{pickColors.splice(Number(btn.dataset.remove),1);renderPicks();status.textContent=`추가 컬러 ${pickColors.length}/3개`; }));
+    updateThemeSelectOptions();
+  }
+  function renderRecommend(){
+    recommendList.innerHTML=recommendColor
+      ? `<div class="selected-color"><span class="color-dot" style="background:${recommendColor}"></span><strong>${recommendColor}</strong><button type="button" id="removeRecommend" aria-label="추천 컬러 삭제">×</button></div>`
+      : '<ul class="bullet-list"><li class="empty">아직 추천한 컬러가 없습니다.</li></ul>';
+    const remove=$('removeRecommend');
+    if(remove)remove.addEventListener('click',()=>{recommendColor=null;renderRecommend();recommendStatus.textContent='추천 컬러를 다시 선택할 수 있습니다.';});
+  }
+  function stopMode(){
+    mode='';cursor.style.display='none';
+    pickModeButton.textContent='스포이트 시작';pickModeButton.classList.add('primary');
+    recommendButton.textContent='추천 컬러 선택';recommendButton.classList.add('primary');
+  }
+  function loadFile(file){
+    if(!file||!file.type.startsWith('image/')){setMessage('이미지 파일을 선택해 주세요.',true);return;}
+    if(imageUrl)URL.revokeObjectURL(imageUrl);
+    imageUrl=URL.createObjectURL(file);
+    preview.onload=()=>{
+      previewWrap.style.display='block';dropZone.style.display='none';
+      extractedColors=extractColors(preview);renderMainColors();
+      pickModeButton.disabled=false;recommendButton.disabled=false;
+      status.textContent='스포이트를 시작한 뒤 사진 속 원하는 지점을 클릭하세요.';
+      recommendStatus.textContent='추천 컬러 선택 버튼을 눌러 사진 속 색을 골라주세요.';
+      setMessage('사진에서 주요 컬러를 추출했습니다.');
+    };
+    preview.onerror=()=>setMessage('이미지를 불러오지 못했습니다. 다른 파일을 선택해 주세요.',true);
+    preview.src=imageUrl;stopMode();pickColors=[];recommendColor=null;renderPicks();renderRecommend();
+  }
+  fileInput.addEventListener('change',e=>loadFile(e.target.files[0]));
+  $('changePhoto').addEventListener('click',()=>fileInput.click());
+  $('deletePhoto').addEventListener('click',()=>{
+    stopMode();if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=null;
+    preview.removeAttribute('src');previewWrap.style.display='none';dropZone.style.display='flex';fileInput.value='';
+    extractedColors=[];pickColors=[];recommendColor=null;renderPicks();renderRecommend();
+    mainPalette.innerHTML='<ul class="bullet-list" style="grid-column: 1 / -1;"><li class="empty">사진을 업로드하면 주요 컬러가 표시됩니다.</li></ul>';
+    closestThemeSelect.innerHTML='<option value="">추출된 컬러 중 선택해주세요</option>';
+    pickModeButton.disabled=true;recommendButton.disabled=true;
+    status.textContent='사진을 업로드하면 스포이트를 사용할 수 있습니다.';
+    recommendStatus.textContent='사진을 업로드하면 추천 컬러를 선택할 수 있습니다.';
+    setMessage('사진과 색상 선택을 초기화했습니다.');
+  });
+  ['dragenter','dragover'].forEach(evt=>dropZone.addEventListener(evt,e=>{e.preventDefault();dropZone.classList.add('drag');}));
+  ['dragleave','drop'].forEach(evt=>dropZone.addEventListener(evt,e=>{e.preventDefault();dropZone.classList.remove('drag');}));
+  dropZone.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
+
+  pickModeButton.addEventListener('click',()=>{
+    if(!preview.src)return;
+    if(mode==='pick'){stopMode();status.textContent='스포이트 대기 중';return;}
+    if(pickColors.length>=3){status.textContent='추가 컬러는 최대 3개입니다. 하나를 삭제한 뒤 선택해 주세요.';return;}
+    stopMode();mode='pick';pickModeButton.textContent='스포이트 종료';
+    status.textContent='사진 속 원하는 지점을 클릭하세요. 최대 3개까지 선택할 수 있습니다.';
+  });
+  recommendButton.addEventListener('click',()=>{
+    if(!preview.src)return;
+    if(mode==='recommend'){stopMode();recommendStatus.textContent='추천 컬러 선택을 종료했습니다.';return;}
+    stopMode();mode='recommend';recommendButton.textContent='선택 취소';
+    recommendStatus.textContent='사진 속에서 추천하고 싶은 색을 클릭하세요.';
+  });
+
+  previewStage.addEventListener('click',e=>{
+    if(!mode)return;
+    const rect=preview.getBoundingClientRect();
+    const x=Math.max(0,Math.min(preview.naturalWidth-1,Math.floor((e.clientX-rect.left)/rect.width*preview.naturalWidth)));
+    const y=Math.max(0,Math.min(preview.naturalHeight-1,Math.floor((e.clientY-rect.top)/rect.height*preview.naturalHeight)));
+    const canvas=document.createElement('canvas');canvas.width=preview.naturalWidth;canvas.height=preview.naturalHeight;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    try{
+      ctx.drawImage(preview,0,0);const px=ctx.getImageData(x,y,1,1).data;const hex=rgbToHex(px[0],px[1],px[2]);
+      const stageRect=previewStage.getBoundingClientRect();cursor.style.left=(e.clientX-stageRect.left)+'px';cursor.style.top=(e.clientY-stageRect.top)+'px';cursor.style.display='block';
+      if(mode==='pick'){
+        if(pickColors.length>=3){status.textContent='추가 컬러는 최대 3개입니다.';stopMode();return;}
+        pickColors.push(hex);renderPicks();status.textContent=`${hex} 추가 완료 (${pickColors.length}/3)`;
+        if(pickColors.length>=3)stopMode();
+      }else if(mode==='recommend'){
+        recommendColor=hex;renderRecommend();recommendStatus.textContent=`추천 컬러 ${hex}를 선택했습니다.`;stopMode();
+      }
+    }catch(err){
+      const msg='이 이미지의 색상을 읽을 수 없습니다. 다른 이미지 파일을 사용해 주세요.';
+      if(mode==='recommend')recommendStatus.textContent=msg;else status.textContent=msg;
+    }
+  });
+
+  $('submitBtn').addEventListener('click',()=>{
+    const name=$('participantName').value.trim(),studentId=$('studentId').value.trim();
+    const phone=$('phone').value.trim(),place=$('place').value.trim();
+    const chosenThemeColor=closestThemeSelect.value;
+    if(!preview.src){setMessage('먼저 사진을 업로드해 주세요.',true);return;}
+    if(!name||!studentId||!phone||!place){setMessage('이름, 학번, 전화번호, 발견한 장소를 모두 입력해 주세요.',true);return;}
+    if(!chosenThemeColor){setMessage('테마 컬러와 가장 가까운 색을 선택해 주세요.',true);return;}
+    const picks=pickColors.length?pickColors.join(', '):'미선택';
+    const recommend=recommendColor||'미선택';
+    setMessage(`시연용 기록 확인: ${name} / ${studentId} / ${place} / ${todayTheme.day} ${todayTheme.name} (선택색:${chosenThemeColor}) / 추가 컬러 ${picks} / 추천 컬러 ${recommend} · 실제 전송은 되지 않습니다.`);
+  });
+})();
+</script>
+</body>
+</html>
